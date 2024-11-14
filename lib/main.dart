@@ -17,7 +17,8 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Namer App',
+        debugShowCheckedModeBanner: false,
+        title: 'Search It',
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 180, 232, 10)),
@@ -172,41 +173,43 @@ class GeneratorPage extends StatefulWidget {
   @override
   _GeneratorPageState createState() => _GeneratorPageState();
 }
+Random random = Random();
 
 class _GeneratorPageState extends State<GeneratorPage> {
   final TextEditingController _controller = TextEditingController();
   String? searchQuery;
-  String? imageUrl;
+  List<String> imageUrls = [];
   bool isLoading = false;
+  int numb = random.nextInt(15);
 
-  Future<void> fetchImage(String query) async{
+  Future<void> fetchImages(String query) async {
     setState(() {
       isLoading = true;
-      imageUrl = null;
+      imageUrls = [];
     });
-    const apiKey = '';
-    final url = Uri.parse('https://api.pexels.com/v1/search?query=$query&per_page=10');
+
+    const apiKey = '4FNTqjMqrJBJjmgxCOIpSjYjJmHq6SFEmhlZe8T6x5KQaU7CGOSz32us';
+    int randomPage = Random().nextInt(15) + 1;
+    final url = Uri.parse('https://api.pexels.com/v1/search?query=$query&page=$randomPage&per_page=10');
 
     try {
       final response = await http.get(url, headers: {
         'Authorization': apiKey,
       });
-      if (response.statusCode == 200){
+
+      if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final photos = data['photos'];
-        if(photos.isNotEmpty){
-          final randomIndex = Random().nextInt(photos.length);
-          setState(() {
-            imageUrl = photos[randomIndex]['src']['medium'];
-          });
-        } else {
-          setState(() {
-            imageUrl = null;
-          });
-        }
+
+        setState(() {
+           imageUrls = photos.map<String>((photo) => photo['src']['medium'].toString()).toList();
+        });
+        print('Fetched images: $imageUrls'); // Debug print to verify URLs
+      } else {
+        print("Error fetching images: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error fetching image: $e");
+      print("Error fetching images: $e");
     } finally {
       setState(() {
         isLoading = false;
@@ -219,12 +222,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
 
-    IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
+    IconData icon = appState.favorites.contains(pair) ? Icons.favorite : Icons.favorite_border;
 
     return Center(
       child: Column(
@@ -244,25 +242,33 @@ class _GeneratorPageState extends State<GeneratorPage> {
               onSubmitted: (text) {
                 setState(() {
                   searchQuery = text.toLowerCase();
-                  imageUrl = null;
                 });
-                fetchImage(searchQuery!);
+                fetchImages(searchQuery!);
               },
             ),
           ),
           SizedBox(height: 10),
           if (isLoading)
             CircularProgressIndicator()
-          else if(imageUrl != null)
-            Image.network(
-              imageUrl!,
-              height: 350,
-              width: 350,
-              fit: BoxFit.cover,
+          else if (imageUrls.isNotEmpty)
+            // Carousel of images
+            SizedBox(
+              height: 300,
+              child: PageView.builder(
+                itemCount: imageUrls.length,
+                itemBuilder: (context, index) {
+                  return Image.network(
+                    imageUrls[index],
+                    height: 300,
+                    width: 300,
+                    fit: BoxFit.cover,
+                  );
+                },
+              ),
             )
           else if (searchQuery == null)
             Text(
-              'Welome, search for a word!',
+              'Welcome, search for a word!',
               style: Theme.of(context).textTheme.headlineSmall,
             )
           else
@@ -292,6 +298,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
     );
   }
 }
+
 
 
 

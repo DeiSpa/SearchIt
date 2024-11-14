@@ -24,7 +24,7 @@ android {
         applicationId = "com.example.children_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -35,6 +35,16 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.debug
+        }
+    }
+    
+    signingConfigs {
+        release {
+            // Update the path to the keystore file
+            storeFile file("../../my-release-key.jks") // Relative path to the keystore
+            storePassword "davidSpaHo@28" // Replace with your actual store password
+            keyAlias "my-key-alias" // Replace with your actual key alias
+            keyPassword "davidSpaHo@28" // Replace with your actual key password
         }
     }
 }
