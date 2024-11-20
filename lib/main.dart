@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -6,7 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:english_words/english_words.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -21,9 +23,9 @@ class MyApp extends StatelessWidget {
         title: 'Search It',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 180, 232, 10)),
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 255, 0, 0)),
         ),
-        home: MyHomePage(),
+        home: const MyHomePage(),
       ),
     );
   }
@@ -36,23 +38,20 @@ class MyAppState extends ChangeNotifier {
     current = WordPair.random();
     notifyListeners();
   }
-
-  var favorites = <WordPair>[];
-  
-  void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
-    } else {
-      favorites.add(current);
-    }
-    notifyListeners();
-  }
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
+
+//
+//
+//  NAVIGATION BAR AND MENU
+//
+//
 
 class _MyHomePageState extends State<MyHomePage> {
   var selectedIndex = 0;
@@ -63,10 +62,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     switch (selectedIndex) {
       case 0:
-        page = GeneratorPage();
+        page = const GeneratorPage();
         break;
       case 1:
-        page = FavoritesPage();
+        page = const SettingsPage();
+        break;
+      case 2:
+        page = const GuidePage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -78,73 +80,118 @@ class _MyHomePageState extends State<MyHomePage> {
         
         return Scaffold(
           appBar: AppBar(
-            title: Text('Namer App'),
+            title: const Text('Search It'),
             leading: isDesktop
                 ? null
                 : Builder(
                     builder: (context) => IconButton(
-                      icon: Icon(Icons.menu),
+                      icon: const Icon(Icons.menu),
                       onPressed: () {
                         Scaffold.of(context).openDrawer();
                       },
                     ),
                   ),
+            /*actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                },
+              ),
+            ],*/
           ),
           drawer: isDesktop
-              ? null
-              : Drawer(
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      DrawerHeader(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+            ? null
+            : Drawer(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    Container(
+                      height: 100,
+                      color: Theme.of(context).colorScheme.primary,
+                      child: Align(
+                        alignment: Alignment.center,
                         child: Text(
-                          'Namer App',
+                          'Search It',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary,
                             fontSize: 24,
                           ),
                         ),
                       ),
-                      ListTile(
-                        leading: Icon(Icons.home),
-                        title: Text('Home'),
-                        onTap: () {
-                          setState(() {
-                            selectedIndex = 0;
-                          });
-                          Navigator.pop(context); // Close the drawer
-                        },
+                    ),
+
+                    // Home button
+                    ListTile(
+                      leading: const Icon(Icons.home),
+                      title: const Text('Αρχική'),
+                      onTap: () {
+                        setState(() {
+                          selectedIndex = 0;
+                        });
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+
+                    // Favorites button
+                    ListTile(
+                      leading: const Icon(Icons.settings),
+                      title: const Text('Ρυθμίσεις'),
+                      onTap: () {
+                        setState(() {
+                          selectedIndex = 1;
+                        });
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+
+                    // Guide page button
+                    ListTile(
+                      leading: const Icon(Icons.help),
+                      title: const Text('Οδηγίες χρήσης'),
+                      onTap: () {
+                        setState(() {
+                          selectedIndex = 2;
+                        });
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+
+                    // Company name
+                    Container(
+                      height: 500,
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'By 1c3Gh3tt0',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.blue,
+                        ),
                       ),
-                      ListTile(
-                        leading: Icon(Icons.favorite),
-                        title: Text('Favorites'),
-                        onTap: () {
-                          setState(() {
-                            selectedIndex = 1;
-                          });
-                          Navigator.pop(context); // Close the drawer
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
           body: Row(
             children: [
               if (isDesktop)
                 SafeArea(
                   child: NavigationRail(
                     extended: true,
-                    destinations: [
+                    destinations: const [
                       NavigationRailDestination(
                         icon: Icon(Icons.home),
-                        label: Text('Home'),
+                        label: Text('Αρχική'),
                       ),
                       NavigationRailDestination(
-                        icon: Icon(Icons.favorite),
-                        label: Text('Favorites'),
+                        icon: Icon(Icons.settings),
+                        label: Text('Ρυθμίσεις'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.help),
+                        label: Text('Οδηγίες χρήσης'),
                       ),
                     ],
                     selectedIndex: selectedIndex,
@@ -169,8 +216,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+//
+//
+//  API HANDLER
+//
+//
+
 class GeneratorPage extends StatefulWidget {
+  const GeneratorPage({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _GeneratorPageState createState() => _GeneratorPageState();
 }
 Random random = Random();
@@ -179,18 +235,17 @@ class _GeneratorPageState extends State<GeneratorPage> {
   final TextEditingController _controller = TextEditingController();
   String? searchQuery;
   List<String> imageUrls = [];
+  List<String> imageDescriptions = [];
+  List<String> queryList = [];
   bool isLoading = false;
-  int numb = random.nextInt(15);
+  int currentImage = 0;
+  final PageController _pageController = PageController();
 
-  Future<void> fetchImages(String query) async {
-    setState(() {
-      isLoading = true;
-      imageUrls = [];
-    });
-
+  // When user searches for a word, fetch the image
+  Future<void> fetchImage(String query) async {
     const apiKey = '4FNTqjMqrJBJjmgxCOIpSjYjJmHq6SFEmhlZe8T6x5KQaU7CGOSz32us';
-    int randomPage = Random().nextInt(15) + 1;
-    final url = Uri.parse('https://api.pexels.com/v1/search?query=$query&page=$randomPage&per_page=10');
+    int randomPage = Random().nextInt(30) + 1;
+    final url = Uri.parse('https://api.pexels.com/v1/search?query=$query&page=$randomPage&per_page=1');
 
     try {
       final response = await http.get(url, headers: {
@@ -201,106 +256,228 @@ class _GeneratorPageState extends State<GeneratorPage> {
         final data = jsonDecode(response.body);
         final photos = data['photos'];
 
-        setState(() {
-           imageUrls = photos.map<String>((photo) => photo['src']['medium'].toString()).toList();
-        });
-        print('Fetched images: $imageUrls'); // Debug print to verify URLs
+        if (photos.isNotEmpty) {
+          setState(() {
+            imageUrls.add(photos[0]['src']['medium'].toString());
+            imageDescriptions.add(query);
+            queryList.add(query);
+          });
+        } else {
+          print("No images found for query: $query");
+        }
       } else {
-        print("Error fetching images: ${response.statusCode}");
+        print("Error fetching image: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error fetching images: $e");
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
+      print("Error fetching image: $e");
     }
   }
+
+  // When user clicks refresh, fetch new image
+  Future<void> fetchNewImage(int index) async {
+    String query = queryList[index];
+
+    const apiKey = '4FNTqjMqrJBJjmgxCOIpSjYjJmHq6SFEmhlZe8T6x5KQaU7CGOSz32us';
+    int randomPage = Random().nextInt(30) + 1; // Random page number for diversity
+    final url = Uri.parse('https://api.pexels.com/v1/search?query=$query&page=$randomPage&per_page=1');
+
+    try {
+      final response = await http.get(url, headers: {
+        'Authorization': apiKey,
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final photos = data['photos'];
+
+        if (photos.isNotEmpty) {
+          setState(() {
+            imageUrls[index] = photos[0]['src']['medium'].toString();
+          });
+        }
+      }
+    } catch (e) {
+      print("Error fetching image: $e");
+    }
+  }
+
+  //
+  //
+  //  HOME PAGE
+  //
+  //
 
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
 
-    IconData icon = appState.favorites.contains(pair) ? Icons.favorite : Icons.favorite_border;
+    //
+    //
+    //  SEARCH BAR
+    //
+    //
 
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          const SizedBox(height: 20),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 25),
             child: TextField(
               controller: _controller,
               decoration: InputDecoration(
-                hintText: 'Search for an image...',
-                prefixIcon: Icon(Icons.search),
+                hintText: 'Ψάξε μία εικόνα εδώ...',
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(30),
                 ),
               ),
               onSubmitted: (text) {
-                setState(() {
-                  searchQuery = text.toLowerCase();
-                });
-                fetchImages(searchQuery!);
+                if (text.trim().isNotEmpty) {
+                  setState(() {
+                    searchQuery = text.trim().toLowerCase();
+                  });
+                  fetchImage(searchQuery!);
+                  _controller.clear();
+                }
               },
             ),
           ),
-          SizedBox(height: 10),
+
+          //
+          //
+          //  IMAGES CAROUSEL
+          //
+          //
+          
+          const SizedBox(height: 20),
           if (isLoading)
-            CircularProgressIndicator()
+            const CircularProgressIndicator()
           else if (imageUrls.isNotEmpty)
-            // Carousel of images
             SizedBox(
-              height: 300,
+              height: 320,
+              width: 320,
               child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    currentImage = index;
+                  });
+                },
                 itemCount: imageUrls.length,
                 itemBuilder: (context, index) {
-                  return Image.network(
-                    imageUrls[index],
-                    height: 300,
-                    width: 300,
-                    fit: BoxFit.cover,
+                  return Center(
+                    child: Stack(
+                      children: [
+                        // Displaying the image
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(30.0),
+                          child: Image.network(
+                            imageUrls[index],
+                            height: 320,
+                            width: 320,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        // Refresh button
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.refresh,
+                                color: Colors.black,
+                              ),
+                              onPressed: () {
+                                fetchNewImage(currentImage);
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
             )
           else if (searchQuery == null)
             Text(
-              'Welcome, search for a word!',
+              'Καλωσήρθες!',
               style: Theme.of(context).textTheme.headlineSmall,
             )
           else
             BigCard(pair: pair),
-          SizedBox(height: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite();
-                },
-                icon: Icon(icon),
-                label: Text('Like'),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  appState.getNext();
-                },
-                child: Text('Next'),
-              ),
-            ],
-          ),
+
+          //
+          //
+          //  BUTTONS FOR PREVIOUS AND NEXT IMAGE
+          //
+          //
+
+          const SizedBox(height: 10),
+          if (imageUrls.isNotEmpty) 
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    if (currentImage > 0) {
+                      setState(() {
+                        currentImage -= 1;
+                      });
+                      _pageController.previousPage(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                  },
+                  child: const Text('<'),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  imageDescriptions.isNotEmpty && currentImage < imageDescriptions.length
+                      ? 'Έψαξες: ${imageDescriptions[currentImage]}'
+                      : '',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    if (currentImage < imageUrls.length - 1) {
+                      setState(() {
+                        currentImage += 1;
+                      });
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                  },
+                  child: const Text('>'),
+                ),
+              ],
+            ),
         ],
       ),
     );
   }
 }
-
-
-
 
 class BigCard extends StatelessWidget {
   const BigCard({
@@ -327,30 +504,195 @@ class BigCard extends StatelessWidget {
   }
 }
 
-class FavoritesPage extends StatelessWidget {
+//
+//
+//  SETTINGS PAGE
+//
+//
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({Key? key}) : super(key: key);
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _SettingsPageState createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  bool isAudioMuted = false;
+  bool isSearchFilterEnabled = false;
+  int searchResultsCount = 1;
+
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Ρυθμίσεις',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const Divider(),
+            const SizedBox(height: 20),
+            
+            // Audio settings section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Ήχος εφαρμογής',
+                  style: TextStyle(fontSize: 20),
+                ),
+                Switch(
+                  value: isAudioMuted,
+                  onChanged: (bool value) {
+                    setState(() {
+                      isAudioMuted = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 5),
 
-    if (appState.favorites.isEmpty) {
-      return Center(
-        child: Text('No favorites yet.'),
-      );
-    }
+            // Search filter section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Φίλτρο αναζήτησης',
+                  style: TextStyle(fontSize: 20),
+                ),
+                Switch(
+                  value: isSearchFilterEnabled,
+                  onChanged: (bool value) {
+                    setState(() {
+                      isSearchFilterEnabled = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 5),
 
-    return ListView(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text('You have '
-              '${appState.favorites.length} favorites:'),
+            // Results per search section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Αποτελέσματα αναζήτησης',
+                  style: TextStyle(fontSize: 20),
+                ),
+                DropdownButton<int>(
+                  value: searchResultsCount,
+                  items: List.generate(
+                    5,
+                    (index) => DropdownMenuItem<int>(
+                      value: index + 1,
+                      child: Text((index + 1).toString()),
+                    ),
+                  ),
+                  onChanged: (int? newValue) {
+                    setState(() {
+                      searchResultsCount = newValue ?? 1;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
-        for (var pair in appState.favorites)
-          ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text(pair.asLowerCase),
-          ),
-      ],
+      ),
+    );
+  }
+}
+
+//
+//
+//  GUIDE PAGE
+//
+//
+
+class GuidePage extends StatelessWidget {
+  const GuidePage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      body: const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Οδηγίες Χρήσης',
+              style: TextStyle(fontSize: 24),
+            ),
+            Divider(),
+
+            // Search Icon Section
+            SizedBox(height: 20),
+            Text(
+              'Μπάρα αναζήτησης',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              '1. Άγγιξε την μπάρα',
+              style: TextStyle(fontSize: 18),
+            ),
+            Text(
+              '2. Πληκτρολόγησε μία λέξη',
+              style: TextStyle(fontSize: 18),
+            ),
+            Row(
+              children: [
+                Text(
+                  '3. Πάτησε το ',
+                  style: TextStyle(fontSize: 18),
+                ),
+                Icon(Icons.keyboard_return, size: 24), // Enter icon
+              ],
+            ),
+            Text(
+              '4. Έτοιμο!',
+              style: TextStyle(fontSize: 18),
+            ),
+            Text(
+              '5. Επανέλαβε για περισσότερες λέξεις',
+              style: TextStyle(fontSize: 18),
+            ),
+            Divider(),
+            
+            // Camera Icon Section
+            SizedBox(height: 20),
+            Text(
+              'Αποτελέσματα αναζήτησης',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              '1. Το αποτέλεσμα της πρώτης αναζήτησης, είναι η πρώτη φωτογραφία',
+              style: TextStyle(fontSize: 18),
+            ),
+            Text(
+              '2. Αν δεν είναι το αποτέλεσμα που περίμενες πάτησε το κουμπί πάνω αριστερά στην φωτογραφία',
+              style: TextStyle(fontSize: 18),
+            ),
+            Text(
+              '3. Για την μετάβαση σε άλλα αποτελέσματα χρησιμοποίησε τα κουμπιά ( < ) και ( > ).',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
