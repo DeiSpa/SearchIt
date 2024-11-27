@@ -22,8 +22,8 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Search It',
         theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 255, 0, 0)),
+          useMaterial3: false,
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 72, 0, 255)),
         ),
         home: const MyHomePage(),
       ),
@@ -235,14 +235,43 @@ class _GeneratorPageState extends State<GeneratorPage> {
   final TextEditingController _controller = TextEditingController();
   String? searchQuery;
   List<String> imageUrls = [];
-  List<String> imageDescriptions = [];
+  List<String?> imageDescriptions = [];
   List<String> queryList = [];
   bool isLoading = false;
   int currentImage = 0;
   final PageController _pageController = PageController();
 
+  Future<String> translateToGreek(String text) async {
+    const deepLApiKey = '75ba06f7-f7a1-416d-882a-0aee67bcacdc:fx';
+    final url = Uri.parse('https://api-free.deepl.com/v2/translate');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'DeepL-Auth-Key $deepLApiKey',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'text': text,
+          'source_lang': 'EL',
+          'target_lang': 'EN', // Greek language code for DeepL
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['translations'][0]['text'];
+      } else {
+        throw Exception('Failed to translate text: ${response.statusCode}');
+      }
+    } catch (e) {
+      print("Error translating text: $e");
+      return "Translation error";
+    }
+  }
+
   // When user searches for a word, fetch the image
-  Future<void> fetchImage(String query) async {
+  Future<void> fetchImage(String query, String? original) async {
     const apiKey = '4FNTqjMqrJBJjmgxCOIpSjYjJmHq6SFEmhlZe8T6x5KQaU7CGOSz32us';
     int randomPage = Random().nextInt(30) + 1;
     final url = Uri.parse('https://api.pexels.com/v1/search?query=$query&page=$randomPage&per_page=1');
@@ -259,11 +288,11 @@ class _GeneratorPageState extends State<GeneratorPage> {
         if (photos.isNotEmpty) {
           setState(() {
             imageUrls.add(photos[0]['src']['medium'].toString());
-            imageDescriptions.add(query);
+            imageDescriptions.add(original);
             queryList.add(query);
           });
         } else {
-          print("No images found for query: $query");
+          print("No images found for query: $original");
         }
       } else {
         print("Error fetching image: ${response.statusCode}");
@@ -309,9 +338,6 @@ class _GeneratorPageState extends State<GeneratorPage> {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var pair = appState.current;
-
     //
     //
     //  SEARCH BAR
@@ -334,12 +360,16 @@ class _GeneratorPageState extends State<GeneratorPage> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              onSubmitted: (text) {
+
+              onSubmitted: (text) async {
                 if (text.trim().isNotEmpty) {
                   setState(() {
                     searchQuery = text.trim().toLowerCase();
+
                   });
-                  fetchImage(searchQuery!);
+                  String translatedQuery = await translateToGreek(searchQuery!);
+                  
+                  fetchImage(translatedQuery, searchQuery);
                   _controller.clear();
                 }
               },
@@ -422,7 +452,10 @@ class _GeneratorPageState extends State<GeneratorPage> {
               style: Theme.of(context).textTheme.headlineSmall,
             )
           else
-            BigCard(pair: pair),
+            Text(
+              'Ψάχνω...',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
 
           //
           //
