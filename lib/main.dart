@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:english_words/english_words.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+final storage = FlutterSecureStorage();
 
 void main() {
   runApp(const MyApp());
@@ -19,13 +22,125 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Search It',
+        debugShowCheckedModeBanner: true,
+        title: 'TEACCH',
         theme: ThemeData(
           useMaterial3: false,
           colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 72, 0, 255)),
         ),
-        home: const MyHomePage(),
+        home: const LicenseValidationScreen(),
+      ),
+    );
+  }
+}
+
+class LicenseValidationScreen extends StatefulWidget {
+  const LicenseValidationScreen({Key? key}) : super(key: key);
+
+  @override
+  _LicenseValidationScreenState createState() =>
+      _LicenseValidationScreenState();
+}
+
+class _LicenseValidationScreenState extends State<LicenseValidationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkStoredLicense();
+  }
+
+  Future<void> _checkStoredLicense() async {
+     final storedLicenseKey = await storage.read(key: 'licenseKey');
+    if (storedLicenseKey == "License_is_OK") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MyHomePage()),
+        );
+    }
+  }
+
+
+  final TextEditingController _licenseController = TextEditingController();
+  String? _errorMessage;
+
+  Future<bool> validateLicense(String licenseKey) async {
+    final url = Uri.parse('https://api.jsonbin.io/v3/b/6750e2c3ad19ca34f8d5bb8f');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final decodedResponse = jsonDecode(response.body) as Map<String, dynamic>;
+        final licenses = decodedResponse['record']['licenses'] as List;
+        final matchingLicense = licenses.firstWhere(
+          (license) => license['key'] == licenseKey,
+          orElse: () => null,
+        );
+
+        if (matchingLicense != null && matchingLicense['status'] == 'active') {
+          await storage.write(key: 'licenseKey', value: "License_is_OK");
+          return true;
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: Could not connect to server.';
+      });
+    }
+    return false;
+  }
+
+  void _onValidatePressed() async {
+    final licenseKey = _licenseController.text.trim();
+    if (licenseKey.isEmpty) {
+      setState(() {
+        _errorMessage = 'License key cannot be empty.';
+      });
+      return;
+    }
+
+    final isValid = await validateLicense(licenseKey);
+    if (isValid) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MyHomePage()),
+      );
+    } else {
+      setState(() {
+        _errorMessage = 'Invalid or inactive license key.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('License Validation')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Enter your license key to continue:',
+              style: TextStyle(fontSize: 18),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _licenseController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'License Key',
+                errorText: _errorMessage,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _onValidatePressed,
+              child: const Text('Validate License'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -64,10 +179,10 @@ class _MyHomePageState extends State<MyHomePage> {
       case 0:
         page = const GeneratorPage();
         break;
+      // case 1:
+      //   page = const SettingsPage();
+      //   break;
       case 1:
-        page = const SettingsPage();
-        break;
-      case 2:
         page = const GuidePage();
         break;
       default:
@@ -80,7 +195,7 @@ class _MyHomePageState extends State<MyHomePage> {
         
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Search It'),
+            title: const Text('TEACCH'),
             leading: isDesktop
                 ? null
                 : Builder(
@@ -111,7 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Align(
                         alignment: Alignment.center,
                         child: Text(
-                          'Search It',
+                          'TEACCH',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary,
                             fontSize: 24,
@@ -133,16 +248,16 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
 
                     // Favorites button
-                    ListTile(
-                      leading: const Icon(Icons.settings),
-                      title: const Text('Ρυθμίσεις'),
-                      onTap: () {
-                        setState(() {
-                          selectedIndex = 1;
-                        });
-                        Navigator.pop(context); // Close the drawer
-                      },
-                    ),
+                    // ListTile(
+                    //   leading: const Icon(Icons.settings),
+                    //   title: const Text('Ρυθμίσεις'),
+                    //   onTap: () {
+                    //     setState(() {
+                    //       selectedIndex = 1;
+                    //     });
+                    //     Navigator.pop(context); // Close the drawer
+                    //   },
+                    // ),
 
                     // Guide page button
                     ListTile(
@@ -150,7 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       title: const Text('Οδηγίες χρήσης'),
                       onTap: () {
                         setState(() {
-                          selectedIndex = 2;
+                          selectedIndex = 1;
                         });
                         Navigator.pop(context); // Close the drawer
                       },
@@ -185,10 +300,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         icon: Icon(Icons.home),
                         label: Text('Αρχική'),
                       ),
-                      NavigationRailDestination(
-                        icon: Icon(Icons.settings),
-                        label: Text('Ρυθμίσεις'),
-                      ),
+                      // NavigationRailDestination(
+                      //   icon: Icon(Icons.settings),
+                      //   label: Text('Ρυθμίσεις'),
+                      // ),
                       NavigationRailDestination(
                         icon: Icon(Icons.help),
                         label: Text('Οδηγίες χρήσης'),
@@ -222,6 +337,38 @@ class _MyHomePageState extends State<MyHomePage> {
 //
 //
 
+class FullscreenImagePage extends StatelessWidget {
+  final String imageUrl;
+
+  const FullscreenImagePage({Key? key, required this.imageUrl}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 125, 115, 115),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      backgroundColor: const Color.fromARGB(255, 193, 177, 233),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 0.5, // Allow zooming out
+          maxScale: 5.0, // Allow zooming in
+          child: FittedBox(
+            fit: BoxFit.contain, // Adjust to show the full image, or use BoxFit.cover for cropping
+            child: Image.network(
+              imageUrl,
+              width: MediaQuery.of(context).size.width * 1, // Scale up the width
+              height: MediaQuery.of(context).size.height * 1, // Scale up the height
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
 class GeneratorPage extends StatefulWidget {
   const GeneratorPage({super.key});
 
@@ -242,7 +389,8 @@ class _GeneratorPageState extends State<GeneratorPage> {
   final PageController _pageController = PageController();
 
   Future<String> translateToGreek(String text) async {
-    const deepLApiKey = '75ba06f7-f7a1-416d-882a-0aee67bcacdc:fx';
+    String deepLApiKey = await fetchApiKey();
+    print(deepLApiKey);
     final url = Uri.parse('https://api-free.deepl.com/v2/translate');
     try {
       final response = await http.post(
@@ -275,7 +423,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
     const apiKey = '4FNTqjMqrJBJjmgxCOIpSjYjJmHq6SFEmhlZe8T6x5KQaU7CGOSz32us';
     int randomPage = Random().nextInt(30) + 1;
     final url = Uri.parse('https://api.pexels.com/v1/search?query=$query&page=$randomPage&per_page=1');
-
+    
     try {
       final response = await http.get(url, headers: {
         'Authorization': apiKey,
@@ -327,6 +475,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
       }
     } catch (e) {
       print("Error fetching image: $e");
+      
     }
   }
 
@@ -423,7 +572,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withOpacity(0.1),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -436,6 +585,74 @@ class _GeneratorPageState extends State<GeneratorPage> {
                               ),
                               onPressed: () {
                                 fetchNewImage(currentImage);
+                              },
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                             child: IconButton(
+                              icon: const Icon(
+                                Icons.fullscreen,
+                                color: Colors.black,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        FullscreenImagePage(imageUrl: imageUrls[index]),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 135,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                             child: IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  imageUrls.removeAt(index);
+                                  imageDescriptions.removeAt(index);
+                                  if (currentImage >= imageUrls.length) {
+                                    currentImage = imageUrls.isEmpty ? 0 : imageUrls.length - 1;
+                                  }
+                                });
                               },
                             ),
                           ),
@@ -462,7 +679,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
           //  BUTTONS FOR PREVIOUS AND NEXT IMAGE
           //
           //
-
+          
           const SizedBox(height: 10),
           if (imageUrls.isNotEmpty) 
             Row(
@@ -510,6 +727,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
       ),
     );
   }
+  
 }
 
 class BigCard extends StatelessWidget {
@@ -543,108 +761,108 @@ class BigCard extends StatelessWidget {
 //
 //
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({Key? key}) : super(key: key);
+// class SettingsPage extends StatefulWidget {
+//   const SettingsPage({Key? key}) : super(key: key);
 
-  @override
-  // ignore: library_private_types_in_public_api
-  _SettingsPageState createState() => _SettingsPageState();
-}
+//   @override
+//   // ignore: library_private_types_in_public_api
+//   _SettingsPageState createState() => _SettingsPageState();
+// }
 
-class _SettingsPageState extends State<SettingsPage> {
-  bool isAudioMuted = false;
-  bool isSearchFilterEnabled = false;
-  int searchResultsCount = 1;
+// class _SettingsPageState extends State<SettingsPage> {
+//   bool isAudioMuted = false;
+//   bool isSearchFilterEnabled = false;
+//   int searchResultsCount = 1;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Ρυθμίσεις',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const Divider(),
-            const SizedBox(height: 20),
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+//       body: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             const Text(
+//               'Ρυθμίσεις',
+//               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+//             ),
+//             const Divider(),
+//             const SizedBox(height: 20),
             
-            // Audio settings section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Ήχος εφαρμογής',
-                  style: TextStyle(fontSize: 20),
-                ),
-                Switch(
-                  value: isAudioMuted,
-                  onChanged: (bool value) {
-                    setState(() {
-                      isAudioMuted = value;
-                    });
-                  },
-                ),
-              ],
-            ),
+//             // Audio settings section
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 const Text(
+//                   'Ήχος εφαρμογής',
+//                   style: TextStyle(fontSize: 20),
+//                 ),
+//                 Switch(
+//                   value: isAudioMuted,
+//                   onChanged: (bool value) {
+//                     setState(() {
+//                       isAudioMuted = value;
+//                     });
+//                   },
+//                 ),
+//               ],
+//             ),
             
-            const SizedBox(height: 5),
+//             const SizedBox(height: 5),
 
-            // Search filter section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Φίλτρο αναζήτησης',
-                  style: TextStyle(fontSize: 20),
-                ),
-                Switch(
-                  value: isSearchFilterEnabled,
-                  onChanged: (bool value) {
-                    setState(() {
-                      isSearchFilterEnabled = value;
-                    });
-                  },
-                ),
-              ],
-            ),
+//             // Search filter section
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 const Text(
+//                   'Φίλτρο αναζήτησης',
+//                   style: TextStyle(fontSize: 20),
+//                 ),
+//                 Switch(
+//                   value: isSearchFilterEnabled,
+//                   onChanged: (bool value) {
+//                     setState(() {
+//                       isSearchFilterEnabled = value;
+//                     });
+//                   },
+//                 ),
+//               ],
+//             ),
             
-            const SizedBox(height: 5),
+//             const SizedBox(height: 5),
 
-            // Results per search section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Αποτελέσματα αναζήτησης',
-                  style: TextStyle(fontSize: 20),
-                ),
-                DropdownButton<int>(
-                  value: searchResultsCount,
-                  items: List.generate(
-                    5,
-                    (index) => DropdownMenuItem<int>(
-                      value: index + 1,
-                      child: Text((index + 1).toString()),
-                    ),
-                  ),
-                  onChanged: (int? newValue) {
-                    setState(() {
-                      searchResultsCount = newValue ?? 1;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//             // Results per search section
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 const Text(
+//                   'Αποτελέσματα αναζήτησης',
+//                   style: TextStyle(fontSize: 20),
+//                 ),
+//                 DropdownButton<int>(
+//                   value: searchResultsCount,
+//                   items: List.generate(
+//                     5,
+//                     (index) => DropdownMenuItem<int>(
+//                       value: index + 1,
+//                       child: Text((index + 1).toString()),
+//                     ),
+//                   ),
+//                   onChanged: (int? newValue) {
+//                     setState(() {
+//                       searchResultsCount = newValue ?? 1;
+//                     });
+//                   },
+//                 ),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 //
 //
@@ -727,5 +945,26 @@ class GuidePage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+Future<String> fetchApiKey() async {
+  const url = 'https://api.jsonbin.io/v3/b/67519301ad19ca34f8d604bc'; // Replace with your JSONBin URL
+  const headers = {
+    'X-Master-Key': r"$2a$10$Xknc5ZVPjofBAWhTPU/RduCR3AmnMEZkLgPE8Ztb12OUv06nDewCi"// Replace with your JSONBin Master Key
+  };
+
+  try {
+    final response = await http.get(Uri.parse(url), headers: headers);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print(data['record']['DeepLApiKey']) ;
+      return data['record']['DeepLApiKey']; // Adjust based on your JSON structure
+    } else {
+      throw Exception('Failed to fetch API key. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error fetching API key: $e');
+    throw Exception('Could not fetch API key.');
   }
 }
