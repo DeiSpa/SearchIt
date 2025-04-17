@@ -487,243 +487,170 @@ class _GeneratorPageState extends State<GeneratorPage> {
 
   @override
   Widget build(BuildContext context) {
-    //
-    //
-    //  SEARCH BAR
-    //
-    //
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25),
-            child: TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: 'Ψάξε μία εικόνα εδώ...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25),
+              child: TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText: 'Ψάξε μία εικόνα εδώ...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
-              ),
-
-              onSubmitted: (text) async {
-                if (text.trim().isNotEmpty) {
-                  setState(() {
-                    searchQuery = text.trim().toLowerCase();
-
-                  });
-                  String translatedQuery = await translateToGreek(searchQuery!);
-                  
-                  fetchImage(translatedQuery, searchQuery);
-                  _controller.clear();
-                }
-              },
-            ),
-          ),
-
-          //
-          //
-          //  IMAGES CAROUSEL
-          //
-          //
-          
-          const SizedBox(height: 20),
-          if (isLoading)
-            const CircularProgressIndicator()
-          else if (imageUrls.isNotEmpty)
-            SizedBox(
-              height: 320,
-              width: 320,
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    currentImage = index;
-                  });
+                onSubmitted: (text) async {
+                  if (text.trim().isNotEmpty) {
+                    setState(() {
+                      searchQuery = text.trim().toLowerCase();
+                    });
+                    String translatedQuery = await translateToGreek(searchQuery!);
+                    fetchImage(translatedQuery, searchQuery);
+                    _controller.clear();
+                  }
                 },
-                itemCount: imageUrls.length,
-                itemBuilder: (context, index) {
-                  return Center(
-                    child: Stack(
-                      children: [
-                        // Displaying the image
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(30.0),
-                          child: Image.network(
-                            imageUrls[index],
-                            height: 320,
-                            width: 320,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        // Refresh button
-                        Positioned(
-                          top: 10,
-                          left: 10,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.refresh,
-                                color: Colors.black,
-                              ),
-                              onPressed: () {
-                                fetchNewImage(currentImage);
-                              },
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                             child: IconButton(
-                              icon: const Icon(
-                                Icons.fullscreen,
-                                color: Colors.black,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        FullscreenImagePage(imageUrl: imageUrls[index]),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : imageUrls.isNotEmpty
+                  ? ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      itemCount: imageUrls.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            Center(
+                              child: Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    child: Image.network(
+                                      imageUrls[index],
+                                      height: 320,
+                                      width: 320,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          right: 135,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                             child: IconButton(
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.red,
+                                  Positioned(
+                                    top: 10,
+                                    left: 10,
+                                    child: Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.1),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.refresh, color: Colors.black),
+                                        onPressed: () {
+                                          fetchNewImage(index);
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 10,
+                                    right: 10,
+                                    child: Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.fullscreen, color: Colors.black),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  FullscreenImagePage(imageUrl: imageUrls[index]),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 10,
+                                    left: 60,
+                                    child: Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.3),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.delete, color: Colors.red),
+                                        onPressed: () {
+                                          setState(() {
+                                            imageUrls.removeAt(index);
+                                            imageDescriptions.removeAt(index);
+                                            queryList.removeAt(index);
+                                            if (currentImage >= imageUrls.length) {
+                                              currentImage = imageUrls.isEmpty ? 0 : imageUrls.length - 1;
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  imageUrls.removeAt(index);
-                                  imageDescriptions.removeAt(index);
-                                  if (currentImage >= imageUrls.length) {
-                                    currentImage = imageUrls.isEmpty ? 0 : imageUrls.length - 1;
-                                  }
-                                });
-                              },
                             ),
-                          ),
-                        ),
-                      ],
+                            const SizedBox(height: 10),
+                            Text(
+                              imageDescriptions.isNotEmpty && index < imageDescriptions.length
+                                  ? 'Έψαξες: ${imageDescriptions[index]}'
+                                  : '',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 30),
+                          ],
+                        );
+                      },
+                    )
+                  : const Center(
+                      child: Text(
+                        'Καλωσήρθες!',
+                        style: TextStyle(fontSize: 20),
+                      ),
                     ),
-                  );
-                },
-              ),
-            )
-          else if (searchQuery == null)
-            Text(
-              'Καλωσήρθες!',
-              style: Theme.of(context).textTheme.headlineSmall,
-            )
-          else
-            Text(
-              'Ψάχνω...',
-              style: Theme.of(context).textTheme.headlineSmall,
             ),
-
-          //
-          //
-          //  BUTTONS FOR PREVIOUS AND NEXT IMAGE
-          //
-          //
-          
-          const SizedBox(height: 10),
-          if (imageUrls.isNotEmpty) 
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    if (currentImage > 0) {
-                      setState(() {
-                        currentImage -= 1;
-                      });
-                      _pageController.previousPage(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                  },
-                  child: const Text('<'),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  imageDescriptions.isNotEmpty && currentImage < imageDescriptions.length
-                      ? 'Έψαξες: ${imageDescriptions[currentImage]}'
-                      : '',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    if (currentImage < imageUrls.length - 1) {
-                      setState(() {
-                        currentImage += 1;
-                      });
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeInOut,
-                      );
-                    }
-                  },
-                  child: const Text('>'),
-                ),
-              ],
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
